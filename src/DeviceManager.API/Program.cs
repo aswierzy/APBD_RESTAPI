@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using DeviceManager.Entities;
 using DeviceManager.Logic;
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("MY_DB");
 builder.Services.AddSingleton<IDeviceService, DeviceService>(deviceService => new DeviceService(connectionString));
+builder.Services.AddScoped<IDeviceValidator, DeviceValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -48,7 +50,7 @@ app.MapGet("/api/devices/{id}", (string id, IDeviceService deviceService) =>
     }
 });
 
-app.MapPost("/api/devices", async (HttpRequest request, IDeviceService deviceService) =>
+app.MapPost("/api/devices", async (HttpRequest request, IDeviceService deviceService,IDeviceValidator validator) =>
     {
         string? contentType = request.ContentType?.ToLower();
 
@@ -84,6 +86,11 @@ app.MapPost("/api/devices", async (HttpRequest request, IDeviceService deviceSer
                 if (device == null)
                     return Results.BadRequest("Invalid 'deviceType' provided.");
 
+                var validationResult = validator.ValidateDevice(device);
+                if (validationResult != null)
+                    return Results.BadRequest(validationResult); 
+                
+                
                 var result = deviceService.Create(device);
 
                 return result
@@ -102,7 +109,7 @@ app.MapPost("/api/devices", async (HttpRequest request, IDeviceService deviceSer
 
 
 
-app.MapPut("/api/devices/{id}", async (HttpRequest request, string id, IDeviceService deviceService) =>
+app.MapPut("/api/devices/{id}", async (HttpRequest request, string id, IDeviceService deviceService,IDeviceValidator validator) =>
     {
         string? contentType = request.ContentType?.ToLower();
 
@@ -139,6 +146,12 @@ app.MapPut("/api/devices/{id}", async (HttpRequest request, string id, IDeviceSe
                     return Results.BadRequest("Invalid 'deviceType' provided.");
                 device.Id = id;
 
+                
+                var validationResult = validator.ValidateDevice(device);
+                if (validationResult != null)
+                    return Results.BadRequest(validationResult);
+                
+                
                 var result = deviceService.Update(device);
 
                 return result
