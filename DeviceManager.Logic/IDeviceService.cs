@@ -5,7 +5,7 @@ public interface IDeviceService
 {
     IEnumerable<Device> GetAll();
     Device? GetById(string id);
-    void Create(Device device);
-    void Update(string id, Device device);
-    void Delete(string id);
+    bool Create(Device device);
+    bool Update(Device device);
+    bool Delete(string id);
 }

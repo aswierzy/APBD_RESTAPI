@@ -1,9 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using DeviceManager.Entities;
 using DeviceManager.Logic;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("UniversityDatabase");
+var connectionString = builder.Configuration.GetConnectionString("MY_DB");
+builder.Services.AddSingleton<IDeviceService, DeviceService>(deviceService => new DeviceService(connectionString));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -17,22 +20,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-var deviceService = new DeviceService();
 
-app.MapGet("/devices", () => Results.Ok(deviceService.GetAll()));
-
-app.MapGet("/devices/{id}", (string id) =>
-{
-    var device = deviceService.GetById(id);
-    return device is not null ? Results.Ok(device) : Results.NotFound($"No device with id={id}");
-});
-
-app.MapPost("/devices/computers", (PersonalComputer pc) =>
+app.MapGet("/api/devices", (IDeviceService deviceService) =>
 {
     try
     {
-        deviceService.Create(pc);
-        return Results.Created($"/devices/{pc.Id}", pc);
+        return Results.Ok(deviceService.GetAll());
+    }
+    catch (Exception e)
+    {
+        return Results.BadRequest(e.Message);
+    }
+});
+
+app.MapGet("/api/devices/{id}", (string id, IDeviceService deviceService) =>
+{
+    try
+    {
+        var device = deviceService.GetById(id);
+        return device is not null
+            ? Results.Ok(device)
+            : Results.NotFound($"Device with ID '{id}' not found.");
     }
     catch (Exception ex)
     {
@@ -40,115 +48,126 @@ app.MapPost("/devices/computers", (PersonalComputer pc) =>
     }
 });
 
-app.MapPost("/devices/smartwatches", (Smartwatch watch) =>
+app.MapPost("/api/devices", async (HttpRequest request, IDeviceService deviceService) =>
+    {
+        string? contentType = request.ContentType?.ToLower();
+
+        switch (contentType)
+        {
+            case "application/json":
+            {
+                using var reader = new StreamReader(request.Body);
+                string rawJson = await reader.ReadToEndAsync();
+
+                var json = JsonNode.Parse(rawJson);
+
+                if (json == null)
+                    return Results.BadRequest("Invalid JSON.");
+
+                var type = json["deviceType"];
+                if (type == null)
+                    return Results.BadRequest("Missing 'deviceType' property.");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+
+                Device? device = type.ToString()?.ToLower() switch
+                {
+                    "personalcomputer" => JsonSerializer.Deserialize<PersonalComputer>(json["typeValue"].ToString(), options),
+                    "smartwatch" => JsonSerializer.Deserialize<Smartwatch>(json["typeValue"].ToString(), options),
+                    "embedded" => JsonSerializer.Deserialize<Embedded>(json["typeValue"].ToString(), options),
+                    _ => null
+                };
+
+                if (device == null)
+                    return Results.BadRequest("Invalid 'deviceType' provided.");
+
+                var result = deviceService.Create(device);
+
+                return result
+                    ? Results.Created($"/api/devices/{device.Id}", device)
+                    : Results.BadRequest("Failed to create device.");
+            }
+
+            case "text/plain":
+                return Results.Ok();
+
+            default:
+                return Results.Conflict();
+        }
+    })
+    .Accepts<string>("application/json", ["text/plain"]);
+
+
+
+app.MapPut("/api/devices/{id}", async (HttpRequest request, string id, IDeviceService deviceService) =>
+    {
+        string? contentType = request.ContentType?.ToLower();
+
+        switch (contentType)
+        {
+            case "application/json":
+            {
+                using var reader = new StreamReader(request.Body);
+                string rawJson = await reader.ReadToEndAsync();
+
+                var json = JsonNode.Parse(rawJson);
+
+                if (json == null)
+                    return Results.BadRequest("Invalid JSON.");
+
+                var deviceType = json["deviceType"];
+                if (deviceType == null)
+                    return Results.BadRequest("Missing 'deviceType' field.");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                };
+
+                Device? device = deviceType.ToString()?.ToLower() switch
+                {
+                    "personalcomputer" => JsonSerializer.Deserialize<PersonalComputer>(json["typeValue"].ToString(), options),
+                    "smartwatch" => JsonSerializer.Deserialize<Smartwatch>(json["typeValue"].ToString(), options),
+                    "embedded" => JsonSerializer.Deserialize<Embedded>(json["typeValue"].ToString(), options),
+                    _ => null
+                };
+
+                if (device == null)
+                    return Results.BadRequest("Invalid 'deviceType' provided.");
+                device.Id = id;
+
+                var result = deviceService.Update(device);
+
+                return result
+                    ? Results.Ok($"Device with ID '{id}' updated successfully.")
+                    : Results.NotFound($"Device with ID '{id}' not found.");
+            }
+
+            case "text/plain":
+                return Results.Ok();
+            default:
+                return Results.Conflict();
+        }
+    })
+    .Accepts<string>("application/json", ["text/plain"]);
+
+
+app.MapDelete("/api/devices/{id}", (string id, IDeviceService deviceService) =>
 {
     try
     {
-        deviceService.Create(watch);
-        return Results.Created($"/devices/{watch.Id}", watch);
+        var result = deviceService.Delete(id);
+
+        return result
+            ? Results.Ok($"Device with ID '{id}' deleted successfully.")
+            : Results.NotFound($"Device with ID '{id}' not found.");
     }
     catch (Exception ex)
     {
         return Results.BadRequest(ex.Message);
-    }
-});
-
-app.MapPost("/devices/embedded", (Embedded embedded) =>
-{
-    try
-    {
-        deviceService.Create(embedded);
-        return Results.Created($"/devices/{embedded.Id}", embedded);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-app.MapPut("/devices/computers/{id}", (string id, PersonalComputer updatedPc) =>
-{
-    try
-    {
-        var existing = deviceService.GetById(id);
-        if (existing is null)
-        {
-            return Results.NotFound($"No device with id={id} found.");
-        }
-
-        if (existing is not PersonalComputer)
-        {
-            return Results.BadRequest($"Device {id} is not a PersonalComputer; it is {existing.GetType().Name}.");
-        }
-        deviceService.Update(id, updatedPc);
-        return Results.Ok(updatedPc);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-app.MapPut("/devices/smartwatches/{id}", (string id, Smartwatch updatedWatch) =>
-{
-    try
-    {
-        var existing = deviceService.GetById(id);
-        if (existing is null)
-        {
-            return Results.NotFound($"No device with id={id} found.");
-        }
-
-        if (existing is not Smartwatch)
-        {
-            return Results.BadRequest($"Device {id} is not a Smartwatch; it is {existing.GetType().Name}.");
-        }
-        deviceService.Update(id, updatedWatch);
-        return Results.Ok(updatedWatch);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-app.MapPut("/devices/embedded/{id}", (string id, Embedded updatedEmbedded) =>
-{
-    try
-    {
-        var existing = deviceService.GetById(id);
-        if (existing is null)
-        {
-            return Results.NotFound($"No device with id={id} found.");
-        }
-
-        if (existing is not Embedded)
-        {
-            return Results.BadRequest($"Device {id} is not an Embedded device; it is {existing.GetType().Name}.");
-        }
-
-        deviceService.Update(id, updatedEmbedded);
-
-        return Results.Ok(updatedEmbedded);
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(ex.Message);
-    }
-});
-
-app.MapDelete("/devices/{id}", (string id) =>
-{
-    try
-    {
-        deviceService.Delete(id);
-        return Results.Ok($"Device with id={id} deleted.");
-    }
-    catch (Exception ex)
-    {
-        return ex.Message.Contains("not found")
-            ? Results.NotFound(ex.Message)
-            : Results.BadRequest(ex.Message);
     }
 });
 
