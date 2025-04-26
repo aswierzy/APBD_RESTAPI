@@ -1,6 +1,6 @@
 @DeviceManager.API_HostAddress = http://localhost:5266
 
-GET {{DeviceManager.API_HostAddress}}/weatherforecast/
+GET {{DeviceManager.API_HostAddress}}/api/devices
 Accept: application/json
 
 ###
