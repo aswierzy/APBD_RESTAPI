@@ -87,9 +87,9 @@ ScaffoldingReadMe.txt
 [Bb]uilds/
 Assets/AssetStoreTools*
 MemoryCaptures/
-*.csproj
+#*.csproj
 *.unityproj
-*.sln
+#*.sln
 *.suo
 *.tmp
 *.user
