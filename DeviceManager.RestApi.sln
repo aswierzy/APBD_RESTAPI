@@ -4,7 +4,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.API", "src\De
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Entities", "src\DeviceManager.Entities\DeviceManager.Entities.csproj", "{12468DE7-2FE9-4AA7-8B7B-0BA0AB48230A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Logic", "src\DeviceManager.Logic\DeviceManager.Logic.csproj", "{8649CC09-D8C2-4A73-A5E8-9A395E55D1D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Service", "src\DeviceManager.Service\DeviceManager.Service.csproj", "{8649CC09-D8C2-4A73-A5E8-9A395E55D1D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceManager.Repository", "DeviceManager.Repository\DeviceManager.Repository.csproj", "{2FFFEC84-EE29-45BF-BE44-74610D0F3CAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +26,9 @@ Global
 		{8649CC09-D8C2-4A73-A5E8-9A395E55D1D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8649CC09-D8C2-4A73-A5E8-9A395E55D1D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8649CC09-D8C2-4A73-A5E8-9A395E55D1D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FFFEC84-EE29-45BF-BE44-74610D0F3CAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FFFEC84-EE29-45BF-BE44-74610D0F3CAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FFFEC84-EE29-45BF-BE44-74610D0F3CAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FFFEC84-EE29-45BF-BE44-74610D0F3CAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

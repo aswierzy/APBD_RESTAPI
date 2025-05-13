@@ -6,8 +6,8 @@ public class Smartwatch : Device
 
     public Smartwatch() { }
 
-    public Smartwatch(string id, string name, bool isEnabled, int batteryLevel)
-        : base(id, name, isEnabled)
+    public Smartwatch(string id, string name, bool isEnabled, int batteryLevel, byte[] rowVersion)
+        : base(id, name, isEnabled, rowVersion)
     {
         BatteryLevel = batteryLevel;
     }

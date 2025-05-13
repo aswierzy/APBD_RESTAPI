@@ -4,14 +4,12 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>DeviceManager.Logic</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\DeviceManager.Repository\DeviceManager.Repository.csproj" />
       <ProjectReference Include="..\DeviceManager.Entities\DeviceManager.Entities.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     </ItemGroup>
 
 </Project>

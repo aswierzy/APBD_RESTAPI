@@ -7,8 +7,8 @@ public class Embedded : Device
 
     public Embedded() { }
 
-    public Embedded(string id, string name, bool isEnabled, string ipAddress, string networkName)
-        : base(id, name, isEnabled)
+    public Embedded(string id, string name, bool isEnabled,string ipAddress, string networkName, byte[] rowVersion)
+        : base(id, name, isEnabled, rowVersion)
     {
         IpAddress = ipAddress;
         NetworkName = networkName;

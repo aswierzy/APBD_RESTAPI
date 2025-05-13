@@ -13,7 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DeviceManager.Entities\DeviceManager.Entities.csproj" />
-      <ProjectReference Include="..\DeviceManager.Logic\DeviceManager.Logic.csproj" />
+      <ProjectReference Include="..\DeviceManager.Service\DeviceManager.Service.csproj" />
     </ItemGroup>
 
 </Project>

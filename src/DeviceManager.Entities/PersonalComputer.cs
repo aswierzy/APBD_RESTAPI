@@ -6,8 +6,8 @@ public class PersonalComputer : Device
 
     public PersonalComputer() { }
 
-    public PersonalComputer(string id, string name, bool isEnabled, string? operatingSystem)
-        : base(id, name, isEnabled)
+    public PersonalComputer(string id, string name, bool isEnabled, string? operatingSystem, byte[] rowVersion)
+        : base(id, name, isEnabled, rowVersion)
     {
         OperatingSystem = operatingSystem;
     }
